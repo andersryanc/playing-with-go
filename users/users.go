@@ -17,11 +17,6 @@ type UserDirectory struct {
 	conn *pgx.Conn
 }
 
-// New returns a new users directory
-func (ud *UserDirectory) New(conn *pgx.Conn) *UserDirectory {
-	return &UserDirectory{conn}
-}
-
 // FindByID attempts to load a user from the database for the provided ID.
 func (ud *UserDirectory) FindByID(id int64) (*User, error) {
 	var name string
@@ -31,4 +26,9 @@ func (ud *UserDirectory) FindByID(id int64) (*User, error) {
 	}
 
 	return &User{id, name}, nil
+}
+
+// New returns a new users directory
+func New(conn *pgx.Conn) *UserDirectory {
+	return &UserDirectory{conn}
 }

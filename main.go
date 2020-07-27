@@ -71,10 +71,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// logrus.Infof("queryId: %v", queryID)
 	// u, err := *users.FindByID(n)
 
-	ud := users.UserDirectory{}
-	userDir := ud.New(conn)
-
-	u, err := userDir.FindByID(n)
+	ud := users.New(conn)
+	u, err := ud.FindByID(n)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
 		jsonResponse(w, r, "Not Found", http.StatusNotFound)
