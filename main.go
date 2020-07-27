@@ -12,32 +12,10 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/sirupsen/logrus"
+	"gitlab.com/leadcycl/confluence/users"
 )
 
 var conn *pgx.Conn
-
-type user struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
-type users struct {
-	conn *pgx.Conn
-}
-
-func (u users) New(conn *pgx.Conn) users {
-	return users{conn}
-}
-
-func (u users) FindByID(id int64) (*user, error) {
-	var name string
-	err := u.conn.QueryRow(context.Background(), "select name from users where id=$1", id).Scan(&name)
-	if err != nil {
-		return nil, err
-	}
-
-	return &user{id, name}, nil
-}
 
 type response struct {
 	Message    string `json:"message"`
@@ -93,16 +71,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// logrus.Infof("queryId: %v", queryID)
 	// u, err := *users.FindByID(n)
 
-	usersDir := users{}.New(conn)
+	ud := users.UserDirectory{}
+	userDir := ud.New(conn)
 
-	u, err := usersDir.FindByID(n)
+	u, err := userDir.FindByID(n)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
 		jsonResponse(w, r, "Not Found", http.StatusNotFound)
 		return
 	}
 
-	logrus.Infof("found user: %v", u)
+	logrus.Infof("found user: %v", *u)
 
 	jsonResponse(w, r, "Success", http.StatusOK)
 }
