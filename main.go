@@ -27,8 +27,13 @@ func main() {
 	port := flag.Int("port", 8080, "the port to listen on")
 	flag.Parse()
 
+	dbURL, ok := os.LookupEnv("DATABASE_URL")
+	if !ok {
+		panic("missing environment var DATABASE_URL")
+	}
+
 	var err error
-	conn, err = pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	conn, err = pgx.Connect(context.Background(), dbURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
