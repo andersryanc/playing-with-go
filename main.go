@@ -21,6 +21,24 @@ type user struct {
 	Name string `json:"name"`
 }
 
+type users struct {
+	conn *pgx.Conn
+}
+
+func (u users) New(conn *pgx.Conn) users {
+	return users{conn}
+}
+
+func (u users) FindByID(id int64) (*user, error) {
+	var name string
+	err := u.conn.QueryRow(context.Background(), "select name from users where id=$1", id).Scan(&name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user{id, name}, nil
+}
+
 type response struct {
 	Message    string `json:"message"`
 	StatusCode int    `json:"statusCode"`
@@ -73,15 +91,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// logrus.Infof("queryId: %v", queryID)
+	// u, err := *users.FindByID(n)
 
-	var id int64
-	var name string
-	err = conn.QueryRow(context.Background(), "select id, name from users where id=$1", n).Scan(&id, &name)
+	usersDir := users{}.New(conn)
+
+	u, err := usersDir.FindByID(n)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
 		jsonResponse(w, r, "Not Found", http.StatusNotFound)
 		return
 	}
+
+	logrus.Infof("found user: %v", u)
 
 	jsonResponse(w, r, "Success", http.StatusOK)
 }
