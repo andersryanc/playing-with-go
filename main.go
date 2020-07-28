@@ -27,6 +27,11 @@ func main() {
 	port := flag.Int("port", 8080, "the port to listen on")
 	flag.Parse()
 
+	// pass := gen.RandomString("", -1)
+	// fmt.Printf("random string: %s\n", pass)
+	// fmt.Printf("default chars: %s\n", gen.DefaultChars)
+	// fmt.Printf("default length: %d\n", gen.DefaultLength)
+
 	dbURL, ok := os.LookupEnv("DATABASE_URL")
 	if !ok {
 		panic("missing environment var DATABASE_URL")
