@@ -35,7 +35,6 @@ func init() {
 		os.Exit(1)
 	}
 	defer conn.Close(context.Background())
-
 }
 
 // Handler checks if the provided user id exists
@@ -81,6 +80,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 // FooHandler is just for testing
 func FooHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello foo!, %q", html.EscapeString(r.URL.Path))
+}
+
+// CatchAllHandler will return a not found error
+func CatchAllHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("CatchAllHandler caught path:", r.URL.Path)
+	jsonResponse(w, r, "not found", 400)
 }
 
 func jsonResponse(w http.ResponseWriter, r *http.Request, message string, statusCode int) {
