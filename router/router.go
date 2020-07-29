@@ -25,6 +25,7 @@ func Router(conn *pgx.Conn) (*mux.Router, error) {
 	// router.HandleFunc("/api/deleteAllTask", middleware.DeleteAllTask).Methods("DELETE", "OPTIONS")
 
 	router.HandleFunc("/", m.Handler).Methods("GET", "OPTIONS")
+	router.HandleFunc("/users/{id:[0-9]+}", m.GetUserByIDHandler).Methods("GET", "OPTIONS")
 	router.HandleFunc("/users", m.GetAllUsersHandler).Methods("GET", "OPTIONS")
 	router.HandleFunc("/foo", m.FooHandler).Methods("GET", "OPTIONS")
 	router.HandleFunc("/redir", func(w http.ResponseWriter, r *http.Request) {

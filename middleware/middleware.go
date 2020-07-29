@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v4"
 	"github.com/sirupsen/logrus"
 	"gitlab.com/leadcycl/confluence/users"
@@ -26,22 +27,18 @@ type Middleware struct {
 
 // New returns an instance of Middleware
 func New(conn *pgx.Conn) (*Middleware, error) {
-	return &Middleware{
-		conn,
-	}, nil
+	return &Middleware{conn}, nil
 }
 
-// Handler checks if the provided user id exists
+// Handler is just a basic hello world response
 func (m *Middleware) Handler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		jsonMessage(w, r, "Not Found", http.StatusBadRequest)
-		return
-	}
+	jsonMessage(w, r, "Hello, world!", http.StatusOK)
+}
 
-	// logrus.Infof("New Request:\nuser agent: %v\nremote address: %v\nmethod: %v\n\n", r.UserAgent(), r.RemoteAddr, r.Method)
-	// logrus.Infof("New Request, path: %v query: %v", r.URL.Path, r.URL.Query())
-
-	queryID := r.URL.Query().Get("id")
+// GetUserByIDHandler checks if the provided user id exists
+func (m *Middleware) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	queryID := vars["id"]
 	if queryID == "" {
 		logrus.Errorf("missing queryID")
 		jsonMessage(w, r, "Not Found", http.StatusBadRequest)
@@ -50,13 +47,10 @@ func (m *Middleware) Handler(w http.ResponseWriter, r *http.Request) {
 
 	n, err := strconv.ParseInt(queryID, 10, 64)
 	if err != nil {
-		logrus.Errorf("unable to convert query.id to int: %v", err)
+		logrus.Errorf("unable to convert vars.id to int: %v", err)
 		jsonMessage(w, r, "Not Found", http.StatusBadRequest)
 		return
 	}
-
-	// logrus.Infof("queryId: %v", queryID)
-	// u, err := *users.FindByID(n)
 
 	ud := users.New(m.conn)
 	u, err := ud.FindByID(n)
