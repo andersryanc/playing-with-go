@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-// Router is exported and used in main.go
+// Router creates a new mux.Router to be used by the server.
 func Router(conn *pgx.Conn) (*mux.Router, error) {
 	m, err := middleware.New(conn)
 	if err != nil {

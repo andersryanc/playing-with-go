@@ -20,22 +20,22 @@ type response struct {
 	StatusText string `json:"statusText"`
 }
 
-// Middleware stores the database connection
+// Middleware contains the handler funcs to be used by the router.
 type Middleware struct {
 	conn *pgx.Conn
 }
 
-// New returns an instance of Middleware
+// New returns an instance of Middleware.
 func New(conn *pgx.Conn) (*Middleware, error) {
 	return &Middleware{conn}, nil
 }
 
-// Handler is just a basic hello world response
+// Handler will send a basic hello world response in json.
 func (m *Middleware) Handler(w http.ResponseWriter, r *http.Request) {
 	jsonMessage(w, r, "Hello, world!", http.StatusOK)
 }
 
-// GetUserByIDHandler checks if the provided user id exists
+// GetUserByIDHandler will (try to) load a user from the database and return it as json.
 func (m *Middleware) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	queryID := vars["id"]
@@ -65,7 +65,7 @@ func (m *Middleware) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) 
 	jsonData(w, r, u)
 }
 
-// GetAllUsersHandler loads all the users from the database
+// GetAllUsersHandler loads all the users from the database and returns them as json.
 func (m *Middleware) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	ud := users.New(m.conn)
 	data, err := ud.GetAll()
@@ -80,12 +80,12 @@ func (m *Middleware) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) 
 	jsonData(w, r, data)
 }
 
-// FooHandler is just for testing
+// FooHandler is just for testing.
 func (m *Middleware) FooHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello foo!, %q", html.EscapeString(r.URL.Path))
 }
 
-// CatchAllHandler will return a not found error
+// CatchAllHandler will return a not found error in json.
 func (m *Middleware) CatchAllHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("CatchAllHandler caught path:", r.URL.Path)
 	jsonMessage(w, r, "not found", 400)

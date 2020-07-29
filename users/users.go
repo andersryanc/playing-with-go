@@ -19,7 +19,7 @@ type UserDirectory struct {
 	conn *pgx.Conn
 }
 
-// New returns a new users directory
+// New returns an instance of UserDirectory.
 func New(conn *pgx.Conn) *UserDirectory {
 	return &UserDirectory{conn}
 }
