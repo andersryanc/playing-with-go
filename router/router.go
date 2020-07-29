@@ -3,9 +3,9 @@ package router
 import (
 	"net/http"
 
+	"github.com/andersryanc/playing-with-go/middleware"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v4"
-	"gitlab.com/leadcycl/confluence/middleware"
 )
 
 // Router is exported and used in main.go

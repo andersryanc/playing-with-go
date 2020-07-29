@@ -8,10 +8,10 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/andersryanc/playing-with-go/users"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v4"
 	"github.com/sirupsen/logrus"
-	"gitlab.com/leadcycl/confluence/users"
 )
 
 type response struct {

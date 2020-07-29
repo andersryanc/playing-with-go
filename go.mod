@@ -1,4 +1,4 @@
-module gitlab.com/leadcycl/confluence
+module github.com/andersryanc/playing-with-go
 
 go 1.14
 
