@@ -10,7 +10,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/andersryanc/playing-with-go/router"
+	"github.com/andersryanc/playing-with-go/api/router"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/sirupsen/logrus"

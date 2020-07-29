@@ -3,7 +3,7 @@ package router
 import (
 	"net/http"
 
-	"github.com/andersryanc/playing-with-go/middleware"
+	"github.com/andersryanc/playing-with-go/api/middleware"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v4"
 )
