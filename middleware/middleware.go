@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -14,31 +13,26 @@ import (
 	"gitlab.com/leadcycl/confluence/users"
 )
 
-var conn *pgx.Conn
-
 type response struct {
 	Message    string `json:"message"`
 	StatusCode int    `json:"statusCode"`
 	StatusText string `json:"statusText"`
 }
 
-func init() {
-	dbURL, ok := os.LookupEnv("DATABASE_URL")
-	if !ok {
-		panic("missing environment var DATABASE_URL")
-	}
+// Middleware stores the database connection
+type Middleware struct {
+	conn *pgx.Conn
+}
 
-	var err error
-	conn, err = pgx.Connect(context.Background(), dbURL)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
-	}
-	defer conn.Close(context.Background())
+// New returns an instance of Middleware
+func New(conn *pgx.Conn) (*Middleware, error) {
+	return &Middleware{
+		conn,
+	}, nil
 }
 
 // Handler checks if the provided user id exists
-func Handler(w http.ResponseWriter, r *http.Request) {
+func (m *Middleware) Handler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		jsonResponse(w, r, "Not Found", http.StatusBadRequest)
 		return
@@ -64,7 +58,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	// logrus.Infof("queryId: %v", queryID)
 	// u, err := *users.FindByID(n)
 
-	ud := users.New(conn)
+	ud := users.New(m.conn)
 	u, err := ud.FindByID(n)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
@@ -78,12 +72,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 // FooHandler is just for testing
-func FooHandler(w http.ResponseWriter, r *http.Request) {
+func (m *Middleware) FooHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello foo!, %q", html.EscapeString(r.URL.Path))
 }
 
 // CatchAllHandler will return a not found error
-func CatchAllHandler(w http.ResponseWriter, r *http.Request) {
+func (m *Middleware) CatchAllHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("CatchAllHandler caught path:", r.URL.Path)
 	jsonResponse(w, r, "not found", 400)
 }
