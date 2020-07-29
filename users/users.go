@@ -2,14 +2,16 @@ package users
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v4"
 )
 
 // User is a user
 type User struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID        int64      `json:"id"`
+	Name      string     `json:"name"`
+	CreatedAt *time.Time `json:"createdAt"`
 }
 
 // UserDirectory allows you interact with users in the database.
@@ -17,18 +19,47 @@ type UserDirectory struct {
 	conn *pgx.Conn
 }
 
+// New returns a new users directory
+func New(conn *pgx.Conn) *UserDirectory {
+	return &UserDirectory{conn}
+}
+
 // FindByID attempts to load a user from the database for the provided ID.
 func (ud *UserDirectory) FindByID(id int64) (*User, error) {
-	var name string
-	err := ud.conn.QueryRow(context.Background(), "select name from users where id=$1", id).Scan(&name)
+	u := User{}
+	u.ID = id
+	err := ud.conn.QueryRow(context.Background(), "select name, created_at from users where id=$1", id).Scan(&u.Name, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	return &User{id, name}, nil
+	return &u, nil
 }
 
-// New returns a new users directory
-func New(conn *pgx.Conn) *UserDirectory {
-	return &UserDirectory{conn}
+// GetAll attempts to load all the users from the database.
+func (ud *UserDirectory) GetAll() (*[]User, error) {
+	var users []User
+
+	rows, err := ud.conn.Query(context.Background(), "select id, name, created_at from users")
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		u := User{}
+		err = rows.Scan(&u.ID, &u.Name, &u.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, u)
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	return &users, nil
 }

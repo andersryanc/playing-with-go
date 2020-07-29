@@ -34,7 +34,7 @@ func New(conn *pgx.Conn) (*Middleware, error) {
 // Handler checks if the provided user id exists
 func (m *Middleware) Handler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		jsonResponse(w, r, "Not Found", http.StatusBadRequest)
+		jsonMessage(w, r, "Not Found", http.StatusBadRequest)
 		return
 	}
 
@@ -44,14 +44,14 @@ func (m *Middleware) Handler(w http.ResponseWriter, r *http.Request) {
 	queryID := r.URL.Query().Get("id")
 	if queryID == "" {
 		logrus.Errorf("missing queryID")
-		jsonResponse(w, r, "Not Found", http.StatusBadRequest)
+		jsonMessage(w, r, "Not Found", http.StatusBadRequest)
 		return
 	}
 
 	n, err := strconv.ParseInt(queryID, 10, 64)
 	if err != nil {
 		logrus.Errorf("unable to convert query.id to int: %v", err)
-		jsonResponse(w, r, "Not Found", http.StatusBadRequest)
+		jsonMessage(w, r, "Not Found", http.StatusBadRequest)
 		return
 	}
 
@@ -62,13 +62,28 @@ func (m *Middleware) Handler(w http.ResponseWriter, r *http.Request) {
 	u, err := ud.FindByID(n)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		jsonResponse(w, r, "Not Found", http.StatusNotFound)
+		jsonMessage(w, r, "Not Found", http.StatusNotFound)
 		return
 	}
 
 	logrus.Infof("found user: %v", *u)
 
-	jsonResponse(w, r, "Success", http.StatusOK)
+	jsonData(w, r, u)
+}
+
+// GetAllUsersHandler loads all the users from the database
+func (m *Middleware) GetAllUsersHandler(w http.ResponseWriter, r *http.Request) {
+	ud := users.New(m.conn)
+	data, err := ud.GetAll()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
+		jsonMessage(w, r, "Not Found", http.StatusNotFound)
+		return
+	}
+
+	logrus.Infof("found users: %v", *data)
+
+	jsonData(w, r, data)
 }
 
 // FooHandler is just for testing
@@ -79,10 +94,10 @@ func (m *Middleware) FooHandler(w http.ResponseWriter, r *http.Request) {
 // CatchAllHandler will return a not found error
 func (m *Middleware) CatchAllHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("CatchAllHandler caught path:", r.URL.Path)
-	jsonResponse(w, r, "not found", 400)
+	jsonMessage(w, r, "not found", 400)
 }
 
-func jsonResponse(w http.ResponseWriter, r *http.Request, message string, statusCode int) {
+func jsonMessage(w http.ResponseWriter, r *http.Request, message string, statusCode int) {
 	if statusCode != http.StatusOK {
 		w.WriteHeader(statusCode)
 	}
@@ -90,11 +105,20 @@ func jsonResponse(w http.ResponseWriter, r *http.Request, message string, status
 	// jsonUser, err := json.Marshal(&user{id, name})
 	jsonRes, err := json.Marshal(&response{
 		Message:    message,
-		StatusText: http.StatusText(statusCode),
 		StatusCode: statusCode,
+		StatusText: http.StatusText(statusCode),
 	})
 	if err != nil {
-		logrus.Errorf("unable to marshal user json: %v", err)
+		logrus.Errorf("unable to marshal response json: %v", err)
+	}
+	w.Header().Add("Content-Type", "application/json")
+	fmt.Fprintf(w, string(jsonRes))
+}
+
+func jsonData(w http.ResponseWriter, r *http.Request, data interface{}) {
+	jsonRes, err := json.Marshal(data)
+	if err != nil {
+		logrus.Errorf("unable to marshal json: %v", err)
 	}
 	w.Header().Add("Content-Type", "application/json")
 	fmt.Fprintf(w, string(jsonRes))
